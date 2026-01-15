@@ -1,6 +1,6 @@
 # Tally Server Sync
 
-Automatically sync data from Tally Prime/ERP 9 to your server at regular intervals. Complete solution with Windows client and Node.js server.
+Automatically sync data from Tally Prime/ERP 9 to your server at regular intervals. Complete solution with Windows client and server backends (Node.js + Laravel).
 
 ## 🌟 Features
 
@@ -8,6 +8,7 @@ Automatically sync data from Tally Prime/ERP 9 to your server at regular interva
 ✅ **System Tray Application** - Runs in background  
 ✅ **Auto-Sync** - Configurable interval (default: 1 hour)  
 ✅ **Password Protection** - Secure your settings with password  
+✅ **User Authentication** - Login with email/password for SaaS  
 ✅ **Tally Prime & ERP 9 Support** - Works with both versions  
 ✅ **Multi-Company Support** - Sync specific or current company  
 ✅ **Comprehensive Data Sync** - Company info, ledgers, stock items, vouchers  
@@ -16,15 +17,26 @@ Automatically sync data from Tally Prime/ERP 9 to your server at regular interva
 ✅ **Connection Testing** - Verify Tally and server connectivity  
 ✅ **Windows Startup** - Optional auto-start with Windows  
 
-### Server (Node.js + MySQL)
+### Server Options
+
+#### Option 1: Laravel (Multi-Tenant SaaS) ⭐ **Recommended for SaaS**
+✅ **Multi-Tenant Architecture** - Each user has isolated data  
+✅ **Laravel Sanctum Authentication** - Token-based API auth  
+✅ **RESTful API** - Clean and well-documented  
+✅ **Eloquent ORM** - Clean database interactions  
+✅ **Automatic Upsert** - Insert new, update existing  
+✅ **Transaction Support** - Data consistency  
+✅ **Sync Logging** - Track all operations  
+✅ **User Management** - Built-in registration/login  
+
+#### Option 2: Node.js + MySQL (Single Tenant)
 ✅ **RESTful API** - Clean API endpoints  
-✅ **MySQL Database** - Robust data storage with proper indexing  
+✅ **MySQL Database** - Robust data storage  
 ✅ **API Key Authentication** - Secure access  
 ✅ **Rate Limiting** - Prevent abuse  
-✅ **Automatic Upsert** - Insert new, update existing records  
+✅ **Automatic Upsert** - Insert/update logic  
 ✅ **Transaction Support** - Data consistency  
-✅ **Comprehensive Logging** - Track all operations  
-✅ **Sync Status API** - Monitor sync progress  
+✅ **Comprehensive Logging** - Track operations  
 
 ## 📦 What's Included
 
@@ -36,7 +48,17 @@ Automatically sync data from Tally Prime/ERP 9 to your server at regular interva
 - `build.py` - Build Windows executable
 - `add_to_startup.bat` - Add to Windows startup
 
-### Server Files
+### Laravel Server (Multi-Tenant SaaS)
+- `laravel-server/routes/api.php` - API routes
+- `laravel-server/app/Http/Controllers/Api/` - Controllers
+  - `AuthController.php` - User authentication
+  - `TallySyncController.php` - Tally sync operations
+- `laravel-server/app/Models/` - Eloquent models
+  - `Company.php`, `Ledger.php`, `StockItem.php`, `Voucher.php`, `SyncLog.php`
+- `laravel-server/database/migrations/` - Database migrations
+- `laravel-server/README.md` - Laravel setup guide
+
+### Node.js Server (Single Tenant)
 - `server/app.js` - Express server application
 - `server/package.json` - Node.js dependencies
 - `server/setup-database.js` - Database setup script
@@ -48,43 +70,69 @@ Automatically sync data from Tally Prime/ERP 9 to your server at regular interva
 
 ### Part 1: Setup Server
 
-1. **Install Prerequisites:**
-   - Node.js 14+ ([Download](https://nodejs.org/))
-   - MySQL 5.7+ or MariaDB 10.3+ ([Download](https://dev.mysql.com/downloads/))
+#### Option A: Laravel Server (Multi-Tenant SaaS) ⭐
 
-2. **Clone Repository:**
-   ```bash
-   git clone https://github.com/Moresh-GAA/TallyServerSync.git
-   cd TallyServerSync/server
-   ```
+1. **Prerequisites:**
+   - PHP 8.1+
+   - Composer
+   - MySQL 5.7+
 
-3. **Install Dependencies:**
+2. **Copy Files to Laravel Project:**
    ```bash
-   npm install
-   ```
-
-4. **Configure Environment:**
-   ```bash
-   cp .env.example .env
-   ```
+   # Copy routes
+   cp laravel-server/routes/api.php your-laravel/routes/
    
-   Edit `.env`:
-   ```env
-   PORT=3000
-   DB_HOST=localhost
-   DB_USER=root
-   DB_PASSWORD=your_password
-   DB_NAME=tally_sync
-   API_KEY=your_secure_api_key_here
+   # Copy controllers
+   cp -r laravel-server/app/Http/Controllers/Api your-laravel/app/Http/Controllers/
+   
+   # Copy models
+   cp -r laravel-server/app/Models/* your-laravel/app/Models/
+   
+   # Copy migrations
+   cp laravel-server/database/migrations/* your-laravel/database/migrations/
    ```
 
-5. **Setup Database:**
+3. **Install Sanctum:**
    ```bash
-   npm run setup
+   composer require laravel/sanctum
+   php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
+   ```
+
+4. **Update User Model:**
+   ```php
+   use Laravel\Sanctum\HasApiTokens;
+   
+   class User extends Authenticatable
+   {
+       use HasApiTokens, HasFactory, Notifiable;
+   }
+   ```
+
+5. **Run Migrations:**
+   ```bash
+   php artisan migrate
    ```
 
 6. **Start Server:**
    ```bash
+   php artisan serve
+   ```
+   
+   Server runs at: `http://localhost:8000`
+
+#### Option B: Node.js Server (Single Tenant)
+
+1. **Prerequisites:**
+   - Node.js 14+
+   - MySQL 5.7+
+
+2. **Setup:**
+   ```bash
+   cd server
+   npm install
+   cp .env.example .env
+   # Edit .env with your settings
+   npm run setup
    npm start
    ```
    
@@ -94,33 +142,43 @@ Automatically sync data from Tally Prime/ERP 9 to your server at regular interva
 
 1. **Install Python 3.8+** from [python.org](https://python.org)
 
-2. **Navigate to Client:**
-   ```bash
-   cd ..  # Back to root directory
-   ```
-
-3. **Install Dependencies:**
+2. **Install Dependencies:**
    ```batch
    install.bat
    ```
 
-4. **Run Application:**
+3. **Run Application:**
    ```batch
    run.bat
    ```
 
-5. **Configure Application:**
+4. **Configure Application:**
+
+   **For Laravel (SaaS):**
    - Setup password protection (optional)
+   - **Server Settings:**
+     - Server URL: `http://localhost:8000/api/tally`
+     - Email: `your@email.com`
+     - Password: `your_password`
+   - Click "Login" to authenticate
    - **Tally Settings:**
      - Host: `localhost`
      - Port: `9000`
-   - **Server Settings:**
-     - Server URL: `http://localhost:3000/api`
-     - API Key: (same as in server `.env`)
    - Test connections
    - Save configuration
 
-6. **Start Syncing:**
+   **For Node.js:**
+   - Setup password protection (optional)
+   - **Server Settings:**
+     - Server URL: `http://localhost:3000/api`
+     - API Key: (from server `.env`)
+   - **Tally Settings:**
+     - Host: `localhost`
+     - Port: `9000`
+   - Test connections
+   - Save configuration
+
+5. **Start Syncing:**
    - Go to Sync tab
    - Click "Start Auto Sync"
 
@@ -135,116 +193,132 @@ Automatically sync data from Tally Prime/ERP 9 to your server at regular interva
 4. Set `Port` to `9000`
 5. Save and restart Tally
 
-### Server Configuration
+### Laravel Server Configuration
+
+**Multi-Tenant with User Authentication:**
+
+1. **Register User:**
+   ```http
+   POST /api/auth/register
+   {
+     "name": "John Doe",
+     "email": "john@example.com",
+     "password": "password123",
+     "password_confirmation": "password123"
+   }
+   ```
+
+2. **Login:**
+   ```http
+   POST /api/auth/login
+   {
+     "email": "john@example.com",
+     "password": "password123"
+   }
+   ```
+   
+   Returns token for API access.
+
+3. **Use Token:**
+   ```http
+   Authorization: Bearer {token}
+   ```
+
+### Node.js Server Configuration
 
 Edit `server/.env`:
 
 ```env
-# Server port
 PORT=3000
-
-# Database connection
 DB_HOST=localhost
 DB_USER=root
-DB_PASSWORD=your_secure_password
+DB_PASSWORD=your_password
 DB_NAME=tally_sync
-
-# API security (use strong random key)
-API_KEY=your_very_secure_random_api_key_here
-
-# Environment
-NODE_ENV=production
+API_KEY=your_secure_api_key
 ```
 
-### Client Configuration
+## 🔒 Authentication
 
-In the application:
-- **Server URL:** `http://your-server.com:3000/api`
-- **API Key:** Same as server `API_KEY`
-- **Sync Interval:** 60 minutes (configurable)
+### Laravel (Multi-Tenant)
+- **Method:** Email/Password
+- **Token:** Laravel Sanctum personal access token
+- **Isolation:** Each user's data is completely isolated
+- **Registration:** Users can self-register
+- **Security:** Token-based, automatic expiration
 
-## 🔒 Password Protection
-
-The client includes password protection for settings:
-
-- **Setup Password:** On first run
-- **Unlock Settings:** Required to change configuration
-- **Change Password:** Update your password
-- **Remove Password:** Disable protection
-- **SHA-256 Hashing:** Secure password storage
+### Node.js (Single Tenant)
+- **Method:** API Key
+- **Token:** Static API key in `.env`
+- **Isolation:** Single database for all data
+- **Registration:** Manual setup
+- **Security:** API key validation
 
 ## 📡 API Endpoints
 
-### Health Check
+### Laravel Endpoints
+
 ```
-GET /api/health
+POST   /api/auth/register       - Register new user
+POST   /api/auth/login          - Login user
+POST   /api/auth/logout         - Logout user
+GET    /api/auth/user           - Get user info
+
+POST   /api/tally/company       - Sync company
+POST   /api/tally/ledgers       - Sync ledgers
+POST   /api/tally/stock-items   - Sync stock items
+POST   /api/tally/vouchers      - Sync vouchers
+GET    /api/tally/sync-status   - Get sync status
+GET    /api/tally/sync-history  - Get sync history
 ```
 
-### Company Data
-```
-POST /api/company
-Authorization: Bearer your_api_key
-```
+### Node.js Endpoints
 
-### Ledgers
 ```
-POST /api/ledgers
-Authorization: Bearer your_api_key
-```
-
-### Stock Items
-```
-POST /api/stock-items
-Authorization: Bearer your_api_key
-```
-
-### Vouchers
-```
-POST /api/vouchers
-Authorization: Bearer your_api_key
-```
-
-### Sync Status
-```
-GET /api/sync-status
-Authorization: Bearer your_api_key
+GET    /api/health              - Health check
+POST   /api/company             - Sync company
+POST   /api/ledgers             - Sync ledgers
+POST   /api/stock-items         - Sync stock items
+POST   /api/vouchers            - Sync vouchers
+GET    /api/sync-status         - Get sync status
 ```
 
 ## 💾 Database Schema
 
-### Tables Created
+### Multi-Tenant (Laravel)
 
-1. **companies** - Company information
-2. **ledgers** - All ledger accounts
-3. **stock_items** - Inventory items
-4. **vouchers** - All transactions
-5. **sync_log** - Sync operation history
+All tables include `user_id` for data isolation:
 
-See `server/database/schema.sql` for complete schema.
+- **users** - User accounts
+- **companies** - User's companies
+- **ledgers** - User's ledgers
+- **stock_items** - User's stock items
+- **vouchers** - User's vouchers
+- **sync_logs** - User's sync history
+
+### Single Tenant (Node.js)
+
+- **companies** - All companies
+- **ledgers** - All ledgers
+- **stock_items** - All stock items
+- **vouchers** - All vouchers
+- **sync_log** - All sync history
 
 ## 📊 Data Synchronization
 
 ### How It Works
 
 1. **Client** fetches data from Tally via XML API
-2. **Client** sends data to server via REST API
-3. **Server** validates and stores in MySQL
-4. **Upsert Logic:** New records inserted, existing updated
-5. **Incremental Sync:** Only changed data synced
+2. **Client** authenticates with server (email/password or API key)
+3. **Client** sends data to server via REST API
+4. **Server** validates and stores in MySQL (isolated by user for Laravel)
+5. **Upsert Logic:** New records inserted, existing updated
+6. **Incremental Sync:** Only changed data synced
 
 ### Sync Frequency
 
 - Default: Every 1 hour
 - Configurable: 1 minute to 24 hours
 - Manual sync: Anytime via "Sync Now" button
-
-### Data Handling
-
-- **New Records:** Inserted into database
-- **Updated Records:** Existing records updated
-- **Deleted Records:** Marked as inactive (optional)
-- **Transactions:** All operations in transactions
-- **Rollback:** On error, no partial data
 
 ## 📝 Logs
 
@@ -253,44 +327,46 @@ See `server/database/schema.sql` for complete schema.
 - **View:** Logs tab in application
 - **Rotation:** Daily
 
-### Server Logs
+### Laravel Server Logs
+- **Location:** `storage/logs/laravel.log`
+- **View:** `tail -f storage/logs/laravel.log`
+
+### Node.js Server Logs
 - **Location:** `server/error.log`, `server/combined.log`
 - **View:** `tail -f combined.log`
-- **Rotation:** Automatic
 
 ## 🔧 Deployment
 
-### Deploy Server
+### Laravel Deployment
 
-**Using PM2:**
 ```bash
+# Optimize for production
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan optimize
+
+# Use supervisor for queue workers
+php artisan queue:work --daemon
+```
+
+### Node.js Deployment
+
+```bash
+# Using PM2
 npm install -g pm2
-cd server
 pm2 start app.js --name tally-sync
 pm2 save
 pm2 startup
 ```
 
-**Using Docker:**
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY server/package*.json ./
-RUN npm install --production
-COPY server/ .
-EXPOSE 3000
-CMD ["npm", "start"]
-```
+### Client Deployment
 
-### Deploy Client
-
-**Build Executable:**
 ```batch
+# Build executable
 python build.py
-```
 
-**Add to Startup:**
-```batch
+# Add to startup
 add_to_startup.bat
 ```
 
@@ -306,10 +382,22 @@ add_to_startup.bat
 **Server Connection Failed:**
 - ✅ Check server is running
 - ✅ Verify server URL is correct
-- ✅ Check API key matches
-- ✅ Test with: `curl http://your-server:3000/api/health`
+- ✅ Check credentials (email/password or API key)
+- ✅ Test with: `curl http://your-server/api/health`
 
-### Server Issues
+### Laravel Server Issues
+
+**Authentication Failed:**
+- ✅ Check email/password are correct
+- ✅ Verify Sanctum is installed
+- ✅ Check CORS configuration
+
+**Database Connection Failed:**
+- ✅ Check MySQL is running
+- ✅ Verify credentials in `.env`
+- ✅ Run migrations: `php artisan migrate`
+
+### Node.js Server Issues
 
 **Database Connection Failed:**
 - ✅ Check MySQL is running
@@ -322,38 +410,22 @@ add_to_startup.bat
 
 ## 📖 Documentation
 
+- **Main README:** This file
 - **Client Setup:** `SETUP_GUIDE.md`
-- **Server Setup:** `server/README.md`
+- **Laravel Server:** `laravel-server/README.md`
+- **Node.js Server:** `server/README.md`
+- **Deployment:** `DEPLOYMENT.md`
 - **Database Schema:** `server/database/schema.sql`
-- **SQL Queries:** `server/database/queries.sql`
 
 ## 🔐 Security Best Practices
 
-1. **Use Strong API Key:** Generate random 32+ character key
-2. **HTTPS Only:** Use SSL/TLS for production
-3. **Firewall:** Restrict database access
-4. **Password Protection:** Enable on client
-5. **Regular Backups:** Backup database regularly
-6. **Update Regularly:** Keep dependencies updated
-
-## 📊 Monitoring
-
-### Check Sync Status
-
-**Via API:**
-```bash
-curl http://your-server:3000/api/sync-status \
-  -H "Authorization: Bearer your_api_key"
-```
-
-**Via Database:**
-```sql
-SELECT 
-  (SELECT COUNT(*) FROM companies) as companies,
-  (SELECT COUNT(*) FROM ledgers) as ledgers,
-  (SELECT COUNT(*) FROM stock_items) as stock_items,
-  (SELECT COUNT(*) FROM vouchers) as vouchers;
-```
+1. **Use HTTPS** in production
+2. **Strong Passwords** for user accounts
+3. **Secure API Keys** (32+ characters)
+4. **Firewall** restrict database access
+5. **Regular Backups** of database
+6. **Update Dependencies** regularly
+7. **Monitor Logs** for suspicious activity
 
 ## 🤝 Contributing
 
@@ -377,7 +449,8 @@ For issues:
 
 **1.0.0** - Initial Release
 - Windows client with password protection
-- Node.js server with MySQL
+- Laravel server with multi-tenant support
+- Node.js server with single-tenant support
 - Complete sync solution
 - Comprehensive documentation
 
@@ -387,8 +460,29 @@ For issues:
 
 - **Repository:** https://github.com/Moresh-GAA/TallyServerSync
 - **Client Setup Guide:** [SETUP_GUIDE.md](SETUP_GUIDE.md)
-- **Server Documentation:** [server/README.md](server/README.md)
-- **Database Schema:** [server/database/schema.sql](server/database/schema.sql)
+- **Laravel Server:** [laravel-server/README.md](laravel-server/README.md)
+- **Node.js Server:** [server/README.md](server/README.md)
+- **Deployment Guide:** [DEPLOYMENT.md](DEPLOYMENT.md)
+
+---
+
+## 🌟 Choose Your Server
+
+### Laravel (Multi-Tenant SaaS) ⭐
+**Best for:**
+- SaaS platforms
+- Multiple users/tenants
+- User registration/login
+- Data isolation required
+- Modern PHP stack
+
+### Node.js (Single Tenant)
+**Best for:**
+- Single company
+- Simple deployment
+- API key authentication
+- Node.js stack preference
+- Lightweight solution
 
 ---
 

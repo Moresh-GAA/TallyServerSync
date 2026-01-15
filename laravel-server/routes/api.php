@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\TallySyncController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PasswordResetController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,6 +20,14 @@ Route::prefix('auth')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('user', [AuthController::class, 'user']);
     });
+});
+
+// Password Reset routes
+Route::prefix('password')->group(function () {
+    Route::post('forgot', [PasswordResetController::class, 'sendResetLink']);
+    Route::post('verify-token', [PasswordResetController::class, 'verifyResetToken']);
+    Route::post('reset', [PasswordResetController::class, 'resetPassword']);
+    Route::post('decrypt-data', [PasswordResetController::class, 'decryptResetData']);
 });
 
 // Public health check
